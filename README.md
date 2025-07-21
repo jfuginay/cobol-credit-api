@@ -2,6 +2,12 @@
 
 A COBOL-based credit card processing system with a modern REST API wrapper, complete with Swagger documentation for easy testing with Postman.
 
+## 🚀 One-Click Deploy
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/deploy?template=https%3A%2F%2Fgithub.com%2Fjfuginay%2Fcobol-credit-api)
+
+Click the button above to deploy this API instantly!
+
 ## Features
 
 - **Card Validation**: Luhn algorithm implementation
