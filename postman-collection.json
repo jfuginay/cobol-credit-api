@@ -1,0 +1,91 @@
+{
+  "info": {
+    "name": "Credit Card API",
+    "description": "Collection for testing the Credit Card Processing API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Validate Card",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardNumber\": \"4532015112830366\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/validate",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "validate"]
+        }
+      }
+    },
+    {
+      "name": "Calculate Interest",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardNumber\": \"4532015112830366\",\n  \"customBalance\": 3000\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/calculate-interest",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "calculate-interest"]
+        }
+      }
+    },
+    {
+      "name": "Generate Statement",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardNumber\": \"4532015112830366\",\n  \"format\": \"json\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/generate-statement",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "generate-statement"]
+        }
+      }
+    },
+    {
+      "name": "Get All Cards",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/cards",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cards"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: credit-card-api
+    runtime: docker
+    repo: https://github.com/YOUR_USERNAME/credit-card-api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
