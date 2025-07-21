@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: credit-card-api
+    name: cobol-credit-api
     runtime: docker
-    repo: https://github.com/YOUR_USERNAME/credit-card-api
+    repo: https://github.com/jfuginay/cobol-credit-api
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

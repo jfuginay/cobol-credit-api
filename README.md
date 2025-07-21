@@ -2,11 +2,20 @@
 
 A COBOL-based credit card processing system with a modern REST API wrapper, complete with Swagger documentation for easy testing with Postman.
 
-## 🚀 One-Click Deploy
+## 🚀 Quick Deploy Options
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/deploy?template=https%3A%2F%2Fgithub.com%2Fjfuginay%2Fcobol-credit-api)
+### Option 1: Deploy with Railway
+1. Fork this repository to your GitHub account
+2. Go to [Railway.app](https://railway.app/new)
+3. Click "Deploy from GitHub repo"
+4. Select your forked repository
+5. Railway will auto-detect the Dockerfile and deploy!
 
-Click the button above to deploy this API instantly!
+### Option 2: Deploy with Render
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
+### Option 3: Local Deployment
+Clone and run locally in minutes!
 
 ## Features
 
