@@ -1,0 +1,44 @@
+{
+  "customerId": "CUST464800",
+  "fullName": "John Fuginay",
+  "email": "john.fuginay@realestate.com",
+  "phone": "+1-555-987-6543",
+  "address": {
+    "street": "456 Oak Avenue",
+    "city": "San Francisco",
+    "state": "CA",
+    "zip": "94103"
+  },
+  "cardNumber": "4539-****-****-1486",
+  "cardType": "VISA",
+  "expiryDate": "12/27",
+  "propertyDetails": {
+    "propertyType": "residential",
+    "estimatedValue": 850000,
+    "listingIntent": "sell"
+  },
+  "createdAt": "2025-07-22T18:54:24.801Z",
+  "cardOnFile": true
+}
+{
+  "customerId": "CUST959716",
+  "fullName": "John Fuginay",
+  "email": "john.fuginay@gmail.com",
+  "phone": "+1-555-987-6543",
+  "address": {
+    "street": "456 Oak Avenue",
+    "city": "San Francisco",
+    "state": "CA",
+    "zip": "94103"
+  },
+  "cardNumber": "4031-****-****-0084",
+  "cardType": "VISA",
+  "expiryDate": "04/30",
+  "propertyDetails": {
+    "propertyType": "residential",
+    "estimatedValue": 850000,
+    "listingIntent": "sell"
+  },
+  "createdAt": "2025-07-22T19:02:39.717Z",
+  "cardOnFile": true
+}

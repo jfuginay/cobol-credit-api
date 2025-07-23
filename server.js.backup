@@ -7,11 +7,9 @@ const swaggerUi = require('swagger-ui-express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const CobolWrapper = require('./cobolWrapper');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const cobol = new CobolWrapper();
 
 // Security middleware
 app.use(helmet());
@@ -317,29 +315,15 @@ app.post('/api/validate', async (req, res) => {
       });
     }
     
-    // Check if COBOL is available
-    const cobolAvailable = await cobol.isCobolAvailable();
-    let isValid;
-    
-    if (cobolAvailable) {
-      // Use COBOL program for validation
-      isValid = await cobol.validateCard(cardNumber);
-    } else {
-      // Fallback to JavaScript implementation
-      console.warn('COBOL executable not available, using JavaScript fallback');
-      isValid = validateLuhn(cardNumber);
-    }
-    
+    const isValid = validateLuhn(cardNumber);
     const cardType = getCardType(cardNumber);
     
     res.json({
       valid: isValid,
       cardNumber: maskCardNumber(cardNumber),
-      cardType: cardType,
-      validationMethod: cobolAvailable ? 'COBOL' : 'JavaScript'
+      cardType: cardType
     });
   } catch (error) {
-    console.error('Validation error:', error);
     res.status(500).json({ 
       error: 'Internal server error', 
       code: 'SERVER_ERROR' 
@@ -384,94 +368,49 @@ app.post('/api/calculate-interest', async (req, res) => {
       });
     }
     
-    // Check if COBOL is available
-    const cobolAvailable = await cobol.isCobolAvailable();
+    // Read card data
+    const cardData = await fs.readFile('CARDDATA.DAT', 'utf8');
+    const lines = cardData.split('\n');
+    let cardFound = false;
+    let balance, apr, creditLimit, cardholderName;
     
-    if (cobolAvailable) {
-      try {
-        // Use COBOL program for interest calculation
-        const result = await cobol.calculateInterest(cardNumber);
-        
-        // If custom balance is provided, we need to recalculate
-        if (customBalance !== undefined) {
-          const monthlyRate = result.apr / 12;
-          const interestCharge = customBalance * (monthlyRate / 100);
-          const newBalance = customBalance + interestCharge;
-          
-          res.json({
-            currentBalance: customBalance,
-            apr: result.apr,
-            monthlyRate: parseFloat((monthlyRate).toFixed(2)),
-            interestCharge: parseFloat(interestCharge.toFixed(2)),
-            newBalance: parseFloat(newBalance.toFixed(2)),
-            calculationMethod: 'COBOL'
-          });
-        } else {
-          res.json({
-            ...result,
-            monthlyRate: parseFloat((result.apr / 12).toFixed(2)),
-            calculationMethod: 'COBOL'
-          });
-        }
-      } catch (cobolError) {
-        if (cobolError.message.includes('Card not found')) {
-          return res.status(404).json({ 
-            error: 'Card not found', 
-            code: 'CARD_NOT_FOUND' 
-          });
-        }
-        throw cobolError;
+    for (const line of lines) {
+      if (line.startsWith(cardNumber)) {
+        cardFound = true;
+        // Parse fixed-width COBOL format
+        const lineCardNumber = line.substring(0, 16);
+        cardholderName = line.substring(16, 46).trim();
+        balance = parseFloat(line.substring(46, 55)) / 100;
+        creditLimit = parseFloat(line.substring(55, 64)) / 100;
+        apr = parseFloat(line.substring(64, 69)) / 100;
+        break;
       }
-    } else {
-      // Fallback to JavaScript implementation
-      console.warn('COBOL executable not available, using JavaScript fallback');
-      
-      // Read card data
-      const cardData = await fs.readFile('CARDDATA.DAT', 'utf8');
-      const lines = cardData.split('\n');
-      let cardFound = false;
-      let balance, apr, creditLimit, cardholderName;
-      
-      for (const line of lines) {
-        if (line.startsWith(cardNumber)) {
-          cardFound = true;
-          // Parse fixed-width COBOL format
-          const lineCardNumber = line.substring(0, 16);
-          cardholderName = line.substring(16, 46).trim();
-          balance = parseFloat(line.substring(46, 55)) / 100;
-          creditLimit = parseFloat(line.substring(55, 64)) / 100;
-          apr = parseFloat(line.substring(64, 69)) / 100;
-          break;
-        }
-      }
-      
-      if (!cardFound) {
-        return res.status(404).json({ 
-          error: 'Card not found', 
-          code: 'CARD_NOT_FOUND' 
-        });
-      }
-      
-      // Use custom balance if provided
-      if (customBalance !== undefined) {
-        balance = customBalance;
-      }
-      
-      const monthlyRate = apr / 12;
-      const interestCharge = balance * (monthlyRate / 100);
-      const newBalance = balance + interestCharge;
-      
-      res.json({
-        currentBalance: balance,
-        apr: apr,
-        monthlyRate: parseFloat((monthlyRate).toFixed(2)),
-        interestCharge: parseFloat(interestCharge.toFixed(2)),
-        newBalance: parseFloat(newBalance.toFixed(2)),
-        calculationMethod: 'JavaScript'
+    }
+    
+    if (!cardFound) {
+      return res.status(404).json({ 
+        error: 'Card not found', 
+        code: 'CARD_NOT_FOUND' 
       });
     }
+    
+    // Use custom balance if provided
+    if (customBalance !== undefined) {
+      balance = customBalance;
+    }
+    
+    const monthlyRate = apr / 12;
+    const interestCharge = balance * (monthlyRate / 100);
+    const newBalance = balance + interestCharge;
+    
+    res.json({
+      currentBalance: balance,
+      apr: apr,
+      monthlyRate: parseFloat((monthlyRate).toFixed(2)),
+      interestCharge: parseFloat(interestCharge.toFixed(2)),
+      newBalance: parseFloat(newBalance.toFixed(2))
+    });
   } catch (error) {
-    console.error('Interest calculation error:', error);
     res.status(500).json({ 
       error: 'Internal server error', 
       code: 'SERVER_ERROR' 
@@ -544,82 +483,51 @@ app.post('/api/generate-statement', async (req, res) => {
       });
     }
     
-    // Check if COBOL is available
-    const cobolAvailable = await cobol.isCobolAvailable();
+    // Read card data
+    const cardData = await fs.readFile('CARDDATA.DAT', 'utf8');
+    const lines = cardData.split('\n');
+    let cardFound = false;
+    let balance, apr, creditLimit, cardholderName;
     
-    if (cobolAvailable && format === 'text') {
-      try {
-        // Use COBOL program for text statement generation
-        const statementText = await cobol.generateStatement(cardNumber);
-        
-        res.json({
-          format: 'text',
-          statement: statementText,
-          generationMethod: 'COBOL'
-        });
-      } catch (cobolError) {
-        if (cobolError.message.includes('Card not found')) {
-          return res.status(404).json({ 
-            error: 'Card not found', 
-            code: 'CARD_NOT_FOUND' 
-          });
-        }
-        throw cobolError;
+    for (const line of lines) {
+      if (line.startsWith(cardNumber)) {
+        cardFound = true;
+        cardholderName = line.substring(16, 46).trim();
+        balance = parseFloat(line.substring(46, 55)) / 100;
+        creditLimit = parseFloat(line.substring(55, 64)) / 100;
+        apr = parseFloat(line.substring(64, 69)) / 100;
+        break;
       }
-    } else {
-      // Use JavaScript implementation for JSON format or when COBOL not available
-      if (!cobolAvailable && format === 'text') {
-        console.warn('COBOL executable not available, using JavaScript fallback for JSON format');
-      }
-      
-      // Read card data
-      const cardData = await fs.readFile('CARDDATA.DAT', 'utf8');
-      const lines = cardData.split('\n');
-      let cardFound = false;
-      let balance, apr, creditLimit, cardholderName;
-      
-      for (const line of lines) {
-        if (line.startsWith(cardNumber)) {
-          cardFound = true;
-          cardholderName = line.substring(16, 46).trim();
-          balance = parseFloat(line.substring(46, 55)) / 100;
-          creditLimit = parseFloat(line.substring(55, 64)) / 100;
-          apr = parseFloat(line.substring(64, 69)) / 100;
-          break;
-        }
-      }
-      
-      if (!cardFound) {
-        return res.status(404).json({ 
-          error: 'Card not found', 
-          code: 'CARD_NOT_FOUND' 
-        });
-      }
-      
-      const today = new Date();
-      const dueDate = new Date(today);
-      dueDate.setDate(dueDate.getDate() + 25);
-      
-      const minimumPayment = Math.max(25, balance * 0.03);
-      const availableCredit = creditLimit - balance;
-      
-      const statement = {
-        statementDate: today.toISOString().split('T')[0],
-        cardNumber: maskCardNumber(cardNumber),
-        cardholderName: cardholderName,
-        currentBalance: balance,
-        creditLimit: creditLimit,
-        availableCredit: availableCredit,
-        apr: apr,
-        minimumPayment: parseFloat(minimumPayment.toFixed(2)),
-        dueDate: dueDate.toISOString().split('T')[0],
-        generationMethod: cobolAvailable ? 'JavaScript' : 'JavaScript (COBOL not available)'
-      };
-      
-      res.json(statement);
     }
+    
+    if (!cardFound) {
+      return res.status(404).json({ 
+        error: 'Card not found', 
+        code: 'CARD_NOT_FOUND' 
+      });
+    }
+    
+    const today = new Date();
+    const dueDate = new Date(today);
+    dueDate.setDate(dueDate.getDate() + 25);
+    
+    const minimumPayment = Math.max(25, balance * 0.03);
+    const availableCredit = creditLimit - balance;
+    
+    const statement = {
+      statementDate: today.toISOString().split('T')[0],
+      cardNumber: maskCardNumber(cardNumber),
+      cardholderName: cardholderName,
+      currentBalance: balance,
+      creditLimit: creditLimit,
+      availableCredit: availableCredit,
+      apr: apr,
+      minimumPayment: parseFloat(minimumPayment.toFixed(2)),
+      dueDate: dueDate.toISOString().split('T')[0]
+    };
+    
+    res.json(statement);
   } catch (error) {
-    console.error('Statement generation error:', error);
     res.status(500).json({ 
       error: 'Internal server error', 
       code: 'SERVER_ERROR' 
@@ -807,48 +715,25 @@ app.post('/api/signup', async (req, res) => {
  */
 app.get('/api/cards', async (req, res) => {
   try {
-    // Check if COBOL is available
-    const cobolAvailable = await cobol.isCobolAvailable();
+    const cardData = await fs.readFile('CARDDATA.DAT', 'utf8');
+    const lines = cardData.split('\n').filter(line => line.trim());
     
-    if (cobolAvailable) {
-      try {
-        // Use COBOL program to get all cards
-        const cards = await cobol.getAllCards();
-        res.json({
-          cards: cards,
-          retrievalMethod: 'COBOL'
-        });
-      } catch (cobolError) {
-        throw cobolError;
-      }
-    } else {
-      // Fallback to JavaScript implementation
-      console.warn('COBOL executable not available, using JavaScript fallback');
+    const cards = lines.map(line => {
+      const cardNumber = line.substring(0, 16);
+      const cardholderName = line.substring(16, 46).trim();
+      const balance = parseFloat(line.substring(46, 55)) / 100;
+      const creditLimit = parseFloat(line.substring(55, 64)) / 100;
       
-      const cardData = await fs.readFile('CARDDATA.DAT', 'utf8');
-      const lines = cardData.split('\n').filter(line => line.trim());
-      
-      const cards = lines.map(line => {
-        const cardNumber = line.substring(0, 16);
-        const cardholderName = line.substring(16, 46).trim();
-        const balance = parseFloat(line.substring(46, 55)) / 100;
-        const creditLimit = parseFloat(line.substring(55, 64)) / 100;
-        
-        return {
-          cardNumber: maskCardNumber(cardNumber),
-          cardholderName: cardholderName,
-          balance: balance,
-          creditLimit: creditLimit
-        };
-      });
-      
-      res.json({
-        cards: cards,
-        retrievalMethod: 'JavaScript'
-      });
-    }
+      return {
+        cardNumber: maskCardNumber(cardNumber),
+        cardholderName: cardholderName,
+        balance: balance,
+        creditLimit: creditLimit
+      };
+    });
+    
+    res.json(cards);
   } catch (error) {
-    console.error('Error retrieving cards:', error);
     res.status(500).json({ 
       error: 'Internal server error', 
       code: 'SERVER_ERROR' 
@@ -870,17 +755,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Startup check for COBOL availability
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Swagger documentation available at http://localhost:${PORT}/api-docs`);
-  
-  // Check COBOL availability
-  const cobolAvailable = await cobol.isCobolAvailable();
-  if (cobolAvailable) {
-    console.log('✓ COBOL executable found - API will use COBOL for processing');
-  } else {
-    console.log('⚠ COBOL executable not found - API will use JavaScript fallback');
-    console.log('  To enable COBOL processing, compile with: cobc -x CREDITCARD.cbl -o CREDITCARD');
-  }
 });

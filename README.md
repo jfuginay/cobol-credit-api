@@ -1,6 +1,6 @@
 # Credit Card Processing System
 
-A COBOL-based credit card processing system with a modern REST API wrapper, complete with Swagger documentation for easy testing with Postman.
+A true COBOL-based credit card processing system with a modern REST API wrapper. This project executes actual COBOL programs for credit card processing operations, bridging 50-year-old COBOL technology with modern REST APIs.
 
 ## 🚀 Quick Deploy Options
 
@@ -19,10 +19,12 @@ Clone and run locally in minutes!
 
 ## Features
 
-- **Card Validation**: Luhn algorithm implementation
-- **Interest Calculation**: APR-based monthly interest
-- **Statement Generation**: JSON/text format statements
-- **REST API**: Express.js wrapper for COBOL functionality
+- **True COBOL Execution**: API actually executes compiled COBOL programs
+- **Card Validation**: Luhn algorithm implemented in COBOL
+- **Interest Calculation**: APR-based monthly interest calculated by COBOL
+- **Statement Generation**: COBOL-generated statements in text format
+- **REST API**: Express.js wrapper that interfaces with COBOL executables
+- **Automatic Fallback**: JavaScript implementation when COBOL not available
 - **Swagger Documentation**: Interactive API documentation
 - **Security**: Rate limiting, CORS, Helmet protection
 
@@ -30,20 +32,40 @@ Clone and run locally in minutes!
 
 ### Local Development
 
-1. Install dependencies:
+1. Install GnuCOBOL (required for COBOL execution):
+```bash
+# macOS
+brew install gnu-cobol
+
+# Ubuntu/Debian
+sudo apt-get install gnucobol
+
+# RHEL/CentOS
+sudo yum install gnucobol
+```
+
+2. Install Node.js dependencies:
 ```bash
 npm install
 ```
 
-2. Run the API server:
+3. Compile the COBOL program:
+```bash
+./setup-cobol.sh
+# Or manually: cobc -x CREDITCARD.cbl -o CREDITCARD
+```
+
+4. Run the API server:
 ```bash
 npm start
 ```
 
-3. Access Swagger documentation:
+5. Access Swagger documentation:
 ```
 http://localhost:3000/api-docs
 ```
+
+The server will indicate whether it's using COBOL or JavaScript fallback on startup.
 
 ### Docker Deployment
 
@@ -53,10 +75,14 @@ docker-compose up -d
 
 ## API Endpoints
 
-- `POST /api/validate` - Validate credit card number
-- `POST /api/calculate-interest` - Calculate monthly interest
-- `POST /api/generate-statement` - Generate account statement
-- `GET /api/cards` - List all cards (masked)
+All endpoints will use COBOL execution when available, with automatic fallback to JavaScript:
+
+- `POST /api/validate` - Validate credit card number using COBOL Luhn algorithm
+- `POST /api/calculate-interest` - Calculate monthly interest via COBOL program
+- `POST /api/generate-statement` - Generate account statement (text format uses COBOL)
+- `GET /api/cards` - List all cards (masked) from COBOL data file
+
+Each response includes a `validationMethod`, `calculationMethod`, `generationMethod`, or `retrievalMethod` field indicating whether COBOL or JavaScript was used.
 
 ## Testing with Postman
 

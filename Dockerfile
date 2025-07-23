@@ -20,7 +20,8 @@ RUN npm ci --only=production
 COPY . .
 
 # Compile COBOL program
-RUN cobc -x CREDITCARD.cbl
+RUN cobc -x CREDITCARD.cbl -o CREDITCARD && \
+    chmod +x CREDITCARD
 
 # Create non-root user
 RUN groupadd -g 1001 nodejs && \
