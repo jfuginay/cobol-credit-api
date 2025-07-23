@@ -5,6 +5,10 @@ A true COBOL-based credit card processing system with a modern REST API wrapper.
 ## 🚀 Quick Deploy Options
 
 ### Option 1: Deploy with Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/github/jfuginay/cobol-credit-api)
+
+Or manually:
 1. Fork this repository to your GitHub account
 2. Go to [Railway.app](https://railway.app/new)
 3. Click "Deploy from GitHub repo"
