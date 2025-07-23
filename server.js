@@ -861,6 +861,37 @@ app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
+// COBOL status endpoint
+app.get('/api/cobol-status', async (req, res) => {
+  const fs = require('fs').promises;
+  const cobolAvailable = await cobol.isCobolAvailable();
+  
+  let executableInfo = null;
+  try {
+    const stats = await fs.stat('./CREDITCARD');
+    executableInfo = {
+      exists: true,
+      size: stats.size,
+      mode: stats.mode,
+      isExecutable: (stats.mode & 0o111) !== 0
+    };
+  } catch (err) {
+    executableInfo = {
+      exists: false,
+      error: err.message
+    };
+  }
+  
+  res.json({
+    cobolAvailable,
+    executablePath: './CREDITCARD',
+    executableInfo,
+    platform: process.platform,
+    arch: process.arch,
+    nodeVersion: process.version
+  });
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({

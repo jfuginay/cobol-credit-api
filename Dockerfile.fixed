@@ -1,15 +1,10 @@
 FROM ubuntu:22.04
 
-# Install Node.js and GnuCOBOL with all dependencies
+# Install Node.js and GnuCOBOL
 RUN apt-get update && apt-get install -y \
     curl \
     gnucobol \
-    libcob4 \
-    libcob4-dev \
     build-essential \
-    libgmp-dev \
-    libdb-dev \
-    libncurses5-dev \
     && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean \
@@ -24,7 +19,7 @@ RUN npm ci --only=production
 # Copy application files
 COPY . .
 
-# Compile COBOL program
+# Compile COBOL program and ensure it's executable
 RUN cobc -x CREDITCARD.cbl -o CREDITCARD && \
     chmod +x CREDITCARD && \
     # Test that COBOL executable works
@@ -39,4 +34,9 @@ USER nodejs
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+# Add startup message
+CMD echo "Starting COBOL Credit Card API..." && \
+    echo "Checking COBOL executable..." && \
+    ls -la CREDITCARD && \
+    echo "Starting Node.js server..." && \
+    node server.js
